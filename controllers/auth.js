@@ -1,6 +1,7 @@
 const { response } = require("express");
 const Bcrypt = require("bcryptjs");
 const User = require("../models/users");
+const { GenerateToken } = require("../helpers/jwt");
 
 const CreateUser = async (req, res = response) => {
   try {
@@ -23,31 +24,72 @@ const CreateUser = async (req, res = response) => {
     //Save User
     await users.save();
 
-    res.json({ users });
+    //generate Token
+    const token = await GenerateToken(users.id);
+
+    res.json({ ok: true, users, token });
   } catch (error) {
     console.log(error);
     res.status(500).json({
       ok: false,
-      msg: "Error al crear usuraio",
+      msg: "Error al crear usuario",
     });
   }
 };
 
 const Login = async (req, res = response) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  res.json({
-    ok: true,
-    msg: "Login",
-    email,
-    password,
-  });
+    const userDb = await User.findOne({ email });
+
+    if (!userDb) {
+      res.status(404).json({
+        ok: false,
+        msg: "Email o contraseña incorrectos",
+      });
+    }
+
+    //Validate Password
+    const validatePassword = Bcrypt.compareSync(password, userDb.password);
+
+    if (!validatePassword) {
+      return res.status(404).json({
+        ok: false,
+        msg: "Email o contraseña incorrectos",
+      });
+    }
+
+    //Generate Token
+    const token = await GenerateToken(userDb.id);
+
+    res.json({
+      ok: true,
+      userDb,
+      token,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      ok: false,
+      msg: "Error al iniciar sesion",
+    });
+  }
 };
 
 const RenewToken = async (req, res = response) => {
+  const uid = req.uid;
+
+  //Generate New Token
+  const token = await GenerateToken(uid);
+
+  //Get User
+  const user = await User.findById(uid);
+
   res.json({
     ok: true,
-    msg: "Renew",
+    token,
+    user,
   });
 };
 

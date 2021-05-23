@@ -4,6 +4,7 @@ const { check } = require("express-validator");
 //Constrollers
 const { CreateUser, Login, RenewToken } = require("../controllers/auth");
 const { ValidateCamps } = require("../middlewares/ValidateCamps");
+const { ValidateToken } = require("../middlewares/ValidateToken");
 
 const router = Router();
 
@@ -31,6 +32,6 @@ router.post(
 );
 
 //Token
-router.get("/renew", RenewToken);
+router.get("/renew", ValidateToken, RenewToken);
 
 module.exports = router;
