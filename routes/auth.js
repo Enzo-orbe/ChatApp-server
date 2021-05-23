@@ -3,18 +3,29 @@ const { check } = require("express-validator");
 
 //Constrollers
 const { CreateUser, Login, RenewToken } = require("../controllers/auth");
+const { ValidateCamps } = require("../middlewares/ValidateCamps");
 
 const router = Router();
 
 //Create User
-router.post("/new", CreateUser);
+router.post(
+  "/new",
+  [
+    check("email", "El Email es obligatorio").isEmail(),
+    check("password", "La contraseña  es obligatoria").not().isEmpty(),
+    check("name", "El Nombre es obligatorio").not().isEmpty(),
+    ValidateCamps,
+  ],
+  CreateUser
+);
 
 //Login
 router.post(
   "/",
   [
     check("email", "El Email es obligatorio").isEmail(),
-    check("password", "El Password es obligatorio").not().isEmpty(),
+    check("password", "El Contraseña es obligatoria").not().isEmpty(),
+    ValidateCamps,
   ],
   Login
 );
